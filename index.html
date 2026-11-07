@@ -2,150 +2,189 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Basic Notes</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#111111">
 <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { margin: 0; background: #f4f4f5; color: #111; display: flex; flex-direction: column; height: 100vh; }
-  header { background: #111; color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
-  header h1 { font-size: 18px; margin: 0; }
-  header button { background: white; color: #111; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  body { margin: 0; background: #f4f4f5; color: #111; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  header { background: #111; color: white; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 17px; margin: 0; }
+  header button { background: white; color: #111; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; }
   .wrap { display: flex; flex: 1; overflow: hidden; }
-  aside { width: 260px; background: white; border-right: 1px solid #e4e4e7; display: flex; flex-direction: column; }
-  aside input { margin: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+  aside { width: 180px; background: white; border-right: 1px solid #e4e4e7; display: flex; flex-direction: column; }
+  aside input { margin: 10px; padding: 9px; border: 1px solid #ddd; border-radius: 8px; }
   #list { overflow-y: auto; flex: 1; }
-  .note-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+  .note-item { padding: 11px; border-bottom: 1px solid #eee; cursor: pointer; }
   .note-item.active { background: #eef2ff; }
   .note-item b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .note-item small { color: #888; }
-  main { flex: 1; display: flex; flex-direction: column; padding: 16px; }
-  #title { font-size: 22px; font-weight: 700; border: none; outline: none; background: transparent; padding: 8px 4px; }
-  #editor { flex: 1; border: none; outline: none; resize: none; font-size: 16px; line-height: 1.6; background: transparent; padding: 8px 4px; }
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid #ddd; }
-  .toolbar button { padding: 9px 14px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: 600; }
-  .toolbar button.danger { color: #dc2626; }
-  #status { font-size: 12px; color: #16a34a; padding: 6px 2px; height: 18px; }
-  @media (max-width: 700px) { aside { width: 120px; } header h1 { font-size: 16px; } }
+  main { flex: 1; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+  #title { font-size: 20px; font-weight: 700; border: none; outline: none; background: transparent; padding: 6px 4px; }
+  .tabs { display: flex; gap: 8px; margin: 6px 0; }
+  .tabs button { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd; background: white; font-weight: 700; }
+  .tabs button.active { background: #111; color: white; }
+  #editor { flex: 1; border: none; outline: none; resize: none; font-size: 16px; line-height: 1.6; background: white; padding: 12px; border-radius: 12px; display: block; }
+  #drawWrap { flex: 1; background: white; border-radius: 12px; overflow: hidden; display: none; flex-direction: column; }
+  #canvas { flex: 1; width: 100%; touch-action: none; background: white; display: block; cursor: crosshair; }
+  .tools { display: flex; gap: 6px; padding: 8px; flex-wrap: wrap; align-items: center; border-top: 1px solid #eee; }
+  .tools button { padding: 8px 11px; border-radius: 20px; border: 1px solid #ddd; background: white; font-weight: 700; }
+  .tools button.active { background: #111; color: white; }
+  .color { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
+  .color.sel { border: 2px solid #111; transform: scale(1.15); }
+  .toolbar { display: flex; gap: 8px; padding-top: 10px; flex-wrap: wrap; }
+  .toolbar button { padding: 9px 13px; border-radius: 8px; border: 1px solid #ddd; background: white; font-weight: 600; }
+  #status { font-size: 12px; color: #16a34a; height: 18px; padding: 2px; }
 </style>
 </head>
 <body>
-<header>
-  <h1>📝 Basic Notes</h1>
-  <button onclick="newNote()">+ New Note</button>
-</header>
+<header><h1>📝 Basic Notes</h1><button onclick="newNote()">+ New</button></header>
 <div class="wrap">
-  <aside>
-    <input id="search" placeholder="Search notes..." oninput="renderList()">
-    <div id="list"></div>
-  </aside>
+  <aside><input id="search" placeholder="Search..." oninput="renderList()"><div id="list"></div></aside>
   <main>
     <input id="title" placeholder="Note title..." oninput="autoSave()">
-    <textarea id="editor" placeholder="Start writing here... Everything saves automatically on this device." oninput="autoSave()"></textarea>
+    <div class="tabs">
+      <button id="tabText" class="active" onclick="showTab('text')">⌨️ Text</button>
+      <button id="tabDraw" onclick="showTab('draw')">✏️ Draw / Stylus</button>
+    </div>
+    <textarea id="editor" placeholder="Type here..." oninput="autoSave()"></textarea>
+    <div id="drawWrap">
+      <canvas id="canvas"></canvas>
+      <div class="tools">
+        <button id="btnPen" class="active" onclick="setTool('pen')">✏️ Pen</button>
+        <button id="btnErase" onclick="setTool('eraser')">🧽 Eraser</button>
+        <button onclick="clearCanvas()">🗑️ Clear</button>
+        <div class="color sel" style="background:#111" onclick="setColor('#111',this)"></div>
+        <div class="color" style="background:#dc2626" onclick="setColor('#dc2626',this)"></div>
+        <div class="color" style="background:#2563eb" onclick="setColor('#2563eb',this)"></div>
+        <div class="color" style="background:#16a34a" onclick="setColor('#16a34a',this)"></div>
+        <span id="penSizeLabel" style="font-size:12px">Size: 3</span>
+        <input type="range" min="1" max="20" value="3" oninput="penSize=this.value;document.getElementById('penSizeLabel').textContent='Size: '+this.value" style="width:80px">
+      </div>
+    </div>
     <div id="status">Saved ✓</div>
     <div class="toolbar">
       <button onclick="saveNote()">💾 Save</button>
-      <button onclick="downloadNote()">⬇️ Download .txt</button>
-      <button onclick="deleteNote()" class="danger">🗑️ Delete</button>
+      <button onclick="downloadNote()">⬇️ Download</button>
+      <button onclick="downloadDrawing()">🖼️ Download Drawing</button>
+      <button onclick="deleteNote()" style="color:#dc2626">🗑️ Delete</button>
     </div>
   </main>
 </div>
 
 <script>
-let notes = JSON.parse(localStorage.getItem('basic-notes-v2') || '[]');
-let currentId = null;
-const titleEl = document.getElementById('title');
-const editorEl = document.getElementById('editor');
-const listEl = document.getElementById('list');
-const statusEl = document.getElementById('status');
+let notes = JSON.parse(localStorage.getItem('basic-notes-v3') || '[]');
+let currentId = null, currentMode = 'text', tool = 'pen', color = '#111', penSize = 3;
+let drawing = false, lastX=0, lastY=0;
+const titleEl=document.getElementById('title'), editorEl=document.getElementById('editor'), listEl=document.getElementById('list'), statusEl=document.getElementById('status');
+const canvas=document.getElementById('canvas'), ctx=canvas.getContext('2d');
 
-function saveToStorage() {
-  localStorage.setItem('basic-notes-v2', JSON.stringify(notes));
-}
-
-function renderList() {
-  const q = document.getElementById('search').value.toLowerCase();
-  listEl.innerHTML = '';
-  const filtered = notes.filter(n => (n.title + n.content).toLowerCase().includes(q));
-  filtered.slice().reverse().forEach(n => {
-    const div = document.createElement('div');
-    div.className = 'note-item' + (n.id === currentId ? ' active' : '');
-    div.onclick = () => openNote(n.id);
-    div.innerHTML = `<b>${n.title || 'Untitled'}</b><small>${n.date || ''}</small>`;
-    listEl.appendChild(div);
+function saveToStorage(){ localStorage.setItem('basic-notes-v3', JSON.stringify(notes)); }
+function renderList(){
+  const q=document.getElementById('search').value.toLowerCase();
+  listEl.innerHTML='';
+  notes.filter(n=>(n.title+n.content).toLowerCase().includes(q)).slice().reverse().forEach(n=>{
+    const d=document.createElement('div'); d.className='note-item'+(n.id===currentId?' active':'');
+    d.onclick=()=>openNote(n.id);
+    d.innerHTML=`<b>${n.title||'Untitled'}</b><small>${n.drawing?'✏️ Drawing + ':''}${n.date||''}</small>`;
+    listEl.appendChild(d);
   });
 }
-
-function openNote(id) {
-  currentId = id;
-  const n = notes.find(x => x.id === id);
-  if (!n) return;
-  titleEl.value = n.title;
-  editorEl.value = n.content;
-  renderList();
+function showTab(m){
+  currentMode=m;
+  document.getElementById('tabText').classList.toggle('active', m==='text');
+  document.getElementById('tabDraw').classList.toggle('active', m==='draw');
+  editorEl.style.display = m==='text' ? 'block' : 'none';
+  document.getElementById('drawWrap').style.display = m==='draw' ? 'flex' : 'none';
+  if(m==='draw'){ setTimeout(resizeCanvas, 50); loadDrawing(); }
 }
-
-function newNote() {
-  const n = { id: Date.now(), title: '', content: '', date: new Date().toLocaleString() };
-  notes.push(n);
-  currentId = n.id;
-  titleEl.value = '';
-  editorEl.value = '';
-  titleEl.focus();
-  saveToStorage();
-  renderList();
+function resizeCanvas(){
+  const r=canvas.getBoundingClientRect();
+  const img = canvas.toDataURL();
+  canvas.width = r.width * 2; canvas.height = (r.height) * 2;
+  ctx.scale(2,2); ctx.lineCap='round'; ctx.lineJoin='round';
+  // restore if blank reload
+  if(currentNote() && currentNote().drawing){
+    const im=new Image(); im.onload=()=>{ ctx.clearRect(0,0,r.width,r.height); ctx.drawImage(im,0,0,r.width,r.height); }; im.src=currentNote().drawing;
+  }
 }
-
-function autoSave() {
-  if (!currentId) { newNote(); }
-  const n = notes.find(x => x.id === currentId);
-  if (!n) return;
-  n.title = titleEl.value;
-  n.content = editorEl.value;
-  n.date = new Date().toLocaleString();
-  saveToStorage();
-  renderList();
-  statusEl.textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+function currentNote(){ return notes.find(x=>x.id===currentId); }
+function openNote(id){
+  currentId=id; const n=currentNote(); if(!n) return;
+  titleEl.value=n.title; editorEl.value=n.content; renderList();
+  if(currentMode==='draw') loadDrawing();
 }
-
-function saveNote() {
-  autoSave();
-  alert('Saved locally on this device!');
+function loadDrawing(){
+  const n=currentNote(); if(!n) return;
+  const r=canvas.getBoundingClientRect();
+  ctx.clearRect(0,0,r.width,r.height);
+  if(n.drawing){ const im=new Image(); im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height); im.src=n.drawing; }
 }
-
-function deleteNote() {
-  if (!currentId) return;
-  if (!confirm('Delete this note?')) return;
-  notes = notes.filter(x => x.id !== currentId);
-  saveToStorage();
-  currentId = null;
-  titleEl.value = '';
-  editorEl.value = '';
-  renderList();
+function newNote(){
+  const n={id:Date.now(), title:'', content:'', drawing:'', date:new Date().toLocaleString()};
+  notes.push(n); currentId=n.id; titleEl.value=''; editorEl.value='';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  saveToStorage(); renderList(); titleEl.focus();
 }
-
-function downloadNote() {
-  const text = (titleEl.value + '\n\n' + editorEl.value) || 'Empty note';
-  const blob = new Blob([text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (titleEl.value || 'note') + '.txt';
-  a.click();
-  URL.revokeObjectURL(url);
+function autoSave(){
+  if(!currentId) newNote();
+  const n=currentNote(); if(!n) return;
+  n.title=titleEl.value; n.content=editorEl.value; n.date=new Date().toLocaleString();
+  saveToStorage(); renderList(); statusEl.textContent='Saved ✓ '+new Date().toLocaleTimeString();
 }
-
-// Load on start
-if (notes.length === 0) {
-  notes = [{ id: Date.now(), title: 'Welcome', content: 'This is your first note.\n\nEverything you type saves automatically in this browser / iPhone.\n\nTap + New Note to create another.', date: new Date().toLocaleString() }];
-  saveToStorage();
+function saveDrawing(){
+  const n=currentNote(); if(!n) return;
+  n.drawing = canvas.toDataURL('image/png');
+  n.date=new Date().toLocaleString(); saveToStorage(); renderList();
+  statusEl.textContent='Drawing Saved ✓';
 }
-currentId = notes[notes.length - 1].id;
-openNote(currentId);
-renderList();
+function saveNote(){ autoSave(); saveDrawing(); alert('Saved!'); }
+function deleteNote(){
+  if(!currentId) return; if(!confirm('Delete this note?')) return;
+  notes=notes.filter(x=>x.id!==currentId); saveToStorage();
+  currentId=null; titleEl.value=''; editorEl.value=''; ctx.clearRect(0,0,canvas.width,canvas.height); renderList();
+}
+function setTool(t){ tool=t; document.getElementById('btnPen').classList.toggle('active',t==='pen'); document.getElementById('btnErase').classList.toggle('active',t==='eraser'); }
+function setColor(c,el){ color=c; document.querySelectorAll('.color').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); setTool('pen'); }
+function clearCanvas(){ if(confirm('Clear drawing?')){ ctx.clearRect(0,0,canvas.width,canvas.height); saveDrawing(); } }
+function downloadNote(){
+  const blob=new Blob([titleEl.value+'\n\n'+editorEl.value],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(titleEl.value||'note')+'.txt'; a.click();
+}
+function downloadDrawing(){
+  saveDrawing(); const a=document.createElement('a'); a.href=canvas.toDataURL(); a.download=(titleEl.value||'drawing')+'.png'; a.click();
+}
+// --- STYLUS / PEN / TOUCH DRAWING ---
+function getPos(e){
+  const r=canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top, pressure: e.pressure || 0.5 };
+}
+canvas.addEventListener('pointerdown', e=>{
+  e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+  drawing=true; const p=getPos(e); lastX=p.x; lastY=p.y;
+  // dot for tap
+  ctx.beginPath(); ctx.arc(p.x,p.y, (tool==='eraser'?10:penSize*p.pressure)/2, 0, Math.PI*2);
+  ctx.fillStyle = tool==='eraser' ? '#fff' : color; ctx.fill();
+});
+canvas.addEventListener('pointermove', e=>{
+  if(!drawing) return; e.preventDefault();
+  const p=getPos(e);
+  ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y);
+  if(tool==='eraser'){ ctx.strokeStyle='#fff'; ctx.lineWidth=20; }
+  else { ctx.strokeStyle=color; ctx.lineWidth = Math.max(1, penSize * (0.5 + p.pressure)); }
+  ctx.stroke(); lastX=p.x; lastY=p.y;
+});
+function endDraw(){ if(drawing){ drawing=false; saveDrawing(); } }
+canvas.addEventListener('pointerup', endDraw);
+canvas.addEventListener('pointercancel', endDraw);
+canvas.addEventListener('pointerleave', endDraw);
+
+if(notes.length===0){ notes=[{id:Date.now(), title:'Welcome', content:'Tap Draw / Stylus tab to handwrite with Apple Pencil or finger.\n\nYour drawing saves automatically!', drawing:'', date:new Date().toLocaleString()}]; saveToStorage(); }
+currentId=notes[notes.length-1].id; openNote(currentId); renderList();
+setTimeout(resizeCanvas, 300);
+window.addEventListener('resize', resizeCanvas);
 </script>
 </body>
 </html>
